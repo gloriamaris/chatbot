@@ -10,9 +10,15 @@ const URI = `/webhook/${API_TOKEN}`
 const WEBHOOK_URL = SERVER_URL + URI
 
 if (typeof localStorage === "undefined" || localStorage === null) {
-  var LocalStorage = require('node-localstorage').LocalStorage;
-  localStorage = new LocalStorage('./scratch');
+  var LocalStorage = require('node-localstorage').LocalStorage
+  localStorage = new LocalStorage('./scratch')
 }
+
+const formData = require('form-data')
+const Mailgun = require('mailgun.js')
+
+const mailgun = new Mailgun(formData);
+const mg = mailgun.client({username: 'api', key: process.env.MAILGUN_API_KEY});
 
 const app = express()
 app.use(bodyParser.json())
@@ -65,6 +71,14 @@ const verifyOTP = async (contactNumber, code) => {
 
   return status
 
+}
+
+// Mailgun service
+const sendEmail = data => {
+  const payload = {
+    from: process.env.MAILGUN_FROM,
+    
+  }
 }
 
 // TODO: move to other file
@@ -206,6 +220,8 @@ const processBot = async (message, step) => {
       let email = localStorage.getItem('sessionEmail')
       let report = localStorage.getItem('sessionReport')
 
+
+
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
@@ -223,6 +239,7 @@ const processBot = async (message, step) => {
 } 
 
 const getCurrentStep = (message) => {
+  const currentStep = localStorage.getItem('currentStep')
 
   if (message.text === '/start') {
     return 1
@@ -255,8 +272,7 @@ const getCurrentStep = (message) => {
       return 6
     }
     
-    if (localStorage.getItem('currentStep')) {
-      console.log('musulod dapat ko diri ====', localStorage.getItem('currentStep'))
+    if (currentStep) {
       return +localStorage.getItem('currentStep')
     }
 
