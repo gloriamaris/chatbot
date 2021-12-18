@@ -54,7 +54,6 @@ const sendOTP = (contactNumber, channel = 'sms') => {
 const verifyOTP = async (contactNumber, code) => {
   const { TWILIO_VERIFY_SID } = process.env
 
-  return 'approved'
   const status = await client.verify.services(TWILIO_VERIFY_SID)
       .verificationChecks
       .create({to: '+' + contactNumber, code: code})
@@ -63,6 +62,8 @@ const verifyOTP = async (contactNumber, code) => {
         console.log('response?????')
         console.log(response)
       })
+
+  return status
 
 }
 
@@ -73,6 +74,7 @@ const processBot = async (message, step) => {
   switch (step) {
     case 0:
       localStorage.removeItem('sessionId')
+      localStorage.removeItem('contactNumber')
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
@@ -163,16 +165,55 @@ const processBot = async (message, step) => {
     case 5:
       let randomNumber = Math.floor(Math.random() * 5)
       let candidate = message.reply_markup.inline_keyboard[0].find(item => item.callback_data === message.selected)
-      console.log(' ==== ', message.reply_markup.inline_keyboard[0])
-      console.log('====== candidate ', candidate)
       let quotableQuote = `"${quotes[message.selected][randomNumber]}"\n–– ${candidate.text}`
+
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
         text: quotableQuote + "\n\nTo generate report, type REPORT.\nTo generate a new quote, type QUOTES."
       }
+    
+    case 6:
+      localStorage.setItem('currentStep', 7)
+      return {
+        chat_id: message.chat.id,
+        message_id: message.message_id,
+        text: "What is your name?"
+      }
+      
+    case 7: 
+      localStorage.setItem('currentStep', 8)
+      localStorage.setItem('sessionName', message.text)
+      console.log('======== message')
+      return {
+        chat_id: message.chat.id,
+        message_id: message.message_id,
+        text: "What is your e-mail address?"
+      }
+      
+    case 8: 
+      localStorage.setItem('currentStep', 9)
+      localStorage.setItem('sessionEmail', message.text)
+      return {
+        chat_id: message.chat.id,
+        message_id: message.message_id,
+        text: "What is your report?"
+      }
+      
+    case 9: 
+      localStorage.setItem('sessionReport', message.text)
+      let name = localStorage.getItem('sessionName')
+      let email = localStorage.getItem('sessionEmail')
+      let report = localStorage.getItem('sessionReport')
+
+      return {
+        chat_id: message.chat.id,
+        message_id: message.message_id,
+        text: name + " \n\n " + email + "\n\n" + report
+      }
 
     default:
+      console.log('unsa diay ang step ???? ', step)
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
@@ -202,13 +243,23 @@ const getCurrentStep = (message) => {
 
   // if user is logged in
   if (localStorage.getItem('sessionId')) {
-    if (message.text === 'QUOTES') {
+    if (message.text === "QUOTES") {
       return 4
     }
 
-    if (message.text === 'Choose one:') {
+    if (message.text === "Choose one:") {
       return 5
     }
+
+    if (message.text === "REPORT") {
+      return 6
+    }
+    
+    if (localStorage.getItem('currentStep')) {
+      console.log('musulod dapat ko diri ====', localStorage.getItem('currentStep'))
+      return +localStorage.getItem('currentStep')
+    }
+
   }
 
   return step
@@ -217,8 +268,6 @@ const getCurrentStep = (message) => {
 app.post(URI, async (req, res) => {
   const { message, callback_query } = req.body
   let requestData = message 
-  console.log(callback_query)
-  console.log('callback_query =======')
 
   if (callback_query) {
     requestData = {
@@ -235,6 +284,7 @@ app.post(URI, async (req, res) => {
   }
 
   const currentStep = getCurrentStep(requestData)
+  localStorage.setItem('currentStep', currentStep)
   console.log('current step ===', currentStep)
   const payload = await processBot(requestData, currentStep)
   console.log('payload ===', payload)
@@ -242,7 +292,6 @@ app.post(URI, async (req, res) => {
   await axios.post(`${TELEGRAM_API}/sendMessage`, JSON.stringify(payload), config)
             .catch(e => {
               console.log('===== error')
-              console.log(e.response.data)
               console.log(e.response)
             })
 
