@@ -2,6 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const bodyParser = require('body-parser')
 const axios = require('axios')
+const quotes = require('./quotes.json')
 
 const { SERVER_URL, API_TOKEN, TELEGRAM_API_URL } = process.env
 const TELEGRAM_API = TELEGRAM_API_URL + '/bot' + API_TOKEN
@@ -65,21 +66,6 @@ const verifyOTP = async (contactNumber, code) => {
 
 }
 
-/* const processVerification = (contactNumber, code) => {
-  const { TWILIO_VERIFY_SID } = process.env
-  await client.verify.services(TWILIO_VERIFY_SID)
-        .verificationChecks
-        .create({
-          to: '+' + contactNumber,
-          code
-        })
-        .then(verification_check => {
-          if (verification_check.status === '')
-        })
-
-
-} */
-
 // TODO: move to other file
 const processBot = async (message, step) => {
   console.log('message', message)
@@ -121,7 +107,6 @@ const processBot = async (message, step) => {
     
     // verify OTP
     case 3:
-      console.log('step 3 =======')
       const status = await verifyOTP(localStorage.getItem('contactNumber'), message.text)
       console.log(status)
       if (status === 'approved') {
@@ -140,7 +125,52 @@ const processBot = async (message, step) => {
           text: "Please enter the OTP sent to your phone number."
         }
       }
-      break
+    
+    case 4: 
+      return {
+        chat_id: message.chat.id,
+        message_id: message.message_id,
+        text: "Choose one:",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { 
+                text: "Ping Lacson",
+                callback_data: "lacson"
+              },
+              { 
+                text: "Bongbong Marcos",
+                callback_data: "marcos"
+              },
+              { 
+                text: "Leni Robredo",
+                callback_data: "robredo"
+              },
+              { 
+                text: "Isko Moreno",
+                callback_data: "moreno"
+              },
+              { 
+                text: "Manny Pacquiao",
+                callback_data: "pacquiao"
+              },
+            ]
+          ],
+          one_time_keyboard: true
+        }
+      }
+    
+    case 5:
+      let randomNumber = Math.floor(Math.random() * 5)
+      let candidate = message.reply_markup.inline_keyboard[0].find(item => item.callback_data === message.selected)
+      console.log(' ==== ', message.reply_markup.inline_keyboard[0])
+      console.log('====== candidate ', candidate)
+      let quotableQuote = `"${quotes[message.selected][randomNumber]}"\n–– ${candidate.text}`
+      return {
+        chat_id: message.chat.id,
+        message_id: message.message_id,
+        text: quotableQuote + "\n\nTo generate report, type REPORT.\nTo generate a new quote, type QUOTES."
+      }
 
     default:
       return {
@@ -175,14 +205,28 @@ const getCurrentStep = (message) => {
     if (message.text === 'QUOTES') {
       return 4
     }
+
+    if (message.text === 'Choose one:') {
+      return 5
+    }
   }
 
   return step
 }
 
 app.post(URI, async (req, res) => {
-  const { message } = req.body
-  //console.log(req.body)
+  const { message, callback_query } = req.body
+  let requestData = message 
+  console.log(callback_query)
+  console.log('callback_query =======')
+
+  if (callback_query) {
+    requestData = {
+      ...callback_query.message,
+      selected: callback_query.data
+    }
+  }
+
   const config = {
     headers: {
       'Authorization': 'Bearer ' + API_TOKEN,
@@ -190,9 +234,9 @@ app.post(URI, async (req, res) => {
     }
   }
 
-  const currentStep = getCurrentStep(message)
+  const currentStep = getCurrentStep(requestData)
   console.log('current step ===', currentStep)
-  const payload = await processBot(message, currentStep)
+  const payload = await processBot(requestData, currentStep)
   console.log('payload ===', payload)
 
   await axios.post(`${TELEGRAM_API}/sendMessage`, JSON.stringify(payload), config)
