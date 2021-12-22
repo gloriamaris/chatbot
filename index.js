@@ -14,11 +14,7 @@ if (typeof localStorage === "undefined" || localStorage === null) {
   localStorage = new LocalStorage('./scratch')
 }
 
-const formData = require('form-data')
-const Mailgun = require('mailgun.js')
-
-const mailgun = new Mailgun(formData);
-const mg = mailgun.client({username: 'api', key: process.env.MAILGUN_API_KEY});
+const mailgun = require("mailgun-js")
 
 const app = express()
 app.use(bodyParser.json())
@@ -75,10 +71,21 @@ const verifyOTP = async (contactNumber, code) => {
 
 // Mailgun service
 const sendEmail = data => {
-  const payload = {
-    from: process.env.MAILGUN_FROM,
-    
-  }
+  console.log('===== sendEmail')
+  console.log(data)
+  const mg = mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
+  mg.messages().send(data, function (error, body) {
+    console.log(body)
+  })
+}
+
+const clearStorage = () => {
+  localStorage.removeItem('sessionId')
+  localStorage.removeItem('sessionName')
+  localStorage.removeItem('sessionEmail')
+  localStorage.removeItem('sessionReport')
+  localStorage.removeItem('contactNumber')
+  localStorage.removeItem('currentStep')
 }
 
 // TODO: move to other file
@@ -87,8 +94,7 @@ const processBot = async (message, step) => {
 
   switch (step) {
     case 0:
-      localStorage.removeItem('sessionId')
-      localStorage.removeItem('contactNumber')
+      clearStorage()
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
@@ -220,12 +226,18 @@ const processBot = async (message, step) => {
       let email = localStorage.getItem('sessionEmail')
       let report = localStorage.getItem('sessionReport')
 
-
+      sendEmail({
+        from: `IS238 Group 5 <${process.env.MAILGUN_FROM}>`,
+        to: `${name} <${email}>`,
+        subject: `A Report from ${name}`,
+        'h:Reply-To': `${name} <${email}>`, 
+        text: report
+      })
 
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
-        text: name + " \n\n " + email + "\n\n" + report
+        text: "Thanks! E-mail sent. Please check your Inbox or Spam folder for the report.\n\nTo generate new quotes, type QUOTES.\nTo logout, please type /logout."
       }
 
     default:
