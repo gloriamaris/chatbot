@@ -140,7 +140,7 @@ const processBot = async (message, step) => {
           text: "Hello, " + message.from.first_name + "! You are now logged in.\nTo get a random quote from presidential candidates, type QUOTES.\nTo logout, type /logout."
         }
       } else {
-        await sendOTP(message.contact.phone_number)
+        await sendOTP(localStorage.getItem('contactNumber'))
         return {
           chat_id: message.chat.id,
           message_id: message.message_id,
