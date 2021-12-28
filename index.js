@@ -241,6 +241,14 @@ const processBot = async (message, step) => {
         text: "Thanks! E-mail sent. Please check your Inbox or Spam folder for the report.\n\nTo generate new quotes, type QUOTES.\nTo logout, please type /logout."
       }
 
+    case 10:
+      console.log('ERROR PATH ========')
+      return {
+        chat_id: message.chat.id,
+        message_id: message.message_id,
+        text: "Sorry, you have entered an invalid keyword. Please try again."
+      }
+
     default:
       console.log('unsa diay ang step ???? ', step)
       return {
@@ -253,7 +261,7 @@ const processBot = async (message, step) => {
 
 const getCurrentStep = (message) => {
   const currentStep = localStorage.getItem('currentStep')
-
+  
   if (message.text === '/start') {
     return 1
   }
@@ -273,6 +281,13 @@ const getCurrentStep = (message) => {
 
   // if user is logged in
   if (localStorage.getItem('sessionId')) {
+    const validKeywords = ["QUOTES", "REPORT"]
+    const isInputFound = validKeywords.findIndex(item => item === message.text)
+
+    if (isInputFound < 0) {
+      return 10
+    }
+
     if (message.text === "QUOTES") {
       return 4
     }
