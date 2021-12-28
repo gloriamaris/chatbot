@@ -283,7 +283,7 @@ const getCurrentStep = (message) => {
   if (localStorage.getItem('sessionId')) {
     const validKeywords = ["QUOTES", "REPORT", "lacson", "marcos", "robredo", "moreno", "pacquiao"]
     const isInputFound = validKeywords.findIndex(item => item === message.text)
-
+    console.log(message.text)
     if (isInputFound < 0) {
       return 10
     }
