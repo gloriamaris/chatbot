@@ -318,28 +318,28 @@ app.post(URI, async (req, res) => {
       ...callback_query.message,
       selected: callback_query.data
     }
-  }
 
-  const config = {
-    headers: {
-      'Authorization': 'Bearer ' + API_TOKEN,
-      'Content-Type': 'application/json'
+    const config = {
+      headers: {
+        'Authorization': 'Bearer ' + API_TOKEN,
+        'Content-Type': 'application/json'
+      }
     }
+  
+    const currentStep = getCurrentStep(requestData)
+    localStorage.setItem('currentStep', currentStep)
+    console.log('current step ===', currentStep)
+    const payload = await processBot(requestData, currentStep)
+    console.log('payload ===', payload)
+  
+    await axios.post(`${TELEGRAM_API}/sendMessage`, JSON.stringify(payload), config)
+              .catch(e => {
+                console.log('===== error')
+                console.log(e.response)
+              })
+  
+    return res.send()
   }
-
-  const currentStep = getCurrentStep(requestData)
-  localStorage.setItem('currentStep', currentStep)
-  console.log('current step ===', currentStep)
-  const payload = await processBot(requestData, currentStep)
-  console.log('payload ===', payload)
-
-  await axios.post(`${TELEGRAM_API}/sendMessage`, JSON.stringify(payload), config)
-            .catch(e => {
-              console.log('===== error')
-              console.log(e.response)
-            })
-
-  return res.send()
 })
 
 
