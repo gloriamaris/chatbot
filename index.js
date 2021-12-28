@@ -120,7 +120,7 @@ const processBot = async (message, step) => {
     // send SMS OTP
     case 2:
       localStorage.setItem('contactNumber', message.contact.phone_number)
-      await sendOTP(message.contact.phone_number)
+      //await sendOTP(message.contact.phone_number)
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
