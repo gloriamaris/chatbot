@@ -260,7 +260,7 @@ const processBot = async (message, step) => {
 } 
 
 const getCurrentStep = (message) => {
-  const currentStep = localStorage.getItem('currentStep')
+  const currentStep = +localStorage.getItem('currentStep')
   
   if (message.text === '/start') {
     return 1
@@ -283,8 +283,8 @@ const getCurrentStep = (message) => {
   if (localStorage.getItem('sessionId')) {
     const validKeywords = ["QUOTES", "REPORT", "Choose one:"]
     const isInputFound = validKeywords.findIndex(item => item === message.text)
-    console.log(message.text)
-    if (isInputFound < 0) {
+    console.log({message: message.text, currentStep})
+    if (isInputFound < 0 && currentStep < 6) {
       return 10
     }
 
@@ -301,7 +301,7 @@ const getCurrentStep = (message) => {
     }
     
     if (currentStep) {
-      return +localStorage.getItem('currentStep')
+      return currentStep
     }
 
   }
@@ -313,12 +313,16 @@ app.post(URI, async (req, res) => {
   const { message, callback_query } = req.body
   let requestData = message 
 
+  console.log({ message, callback_query })
+
   if (callback_query) {
     requestData = {
       ...callback_query.message,
       selected: callback_query.data
     }
+  }
 
+  if (message || callback_query) {
     const config = {
       headers: {
         'Authorization': 'Bearer ' + API_TOKEN,
@@ -340,6 +344,7 @@ app.post(URI, async (req, res) => {
   
     return res.send()
   }
+
 })
 
 
