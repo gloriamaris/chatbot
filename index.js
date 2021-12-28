@@ -284,7 +284,8 @@ const getCurrentStep = (message) => {
     const validKeywords = ["QUOTES", "REPORT", "Choose one:"]
     const isInputFound = validKeywords.findIndex(item => item === message.text)
     console.log({message: message.text, currentStep})
-    if (isInputFound < 0 && currentStep < 6) {
+
+    if (isInputFound < 0 && currentStep >= 5 && currentStep <= 10) {
       return 10
     }
 
