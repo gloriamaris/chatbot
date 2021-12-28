@@ -281,7 +281,7 @@ const getCurrentStep = (message) => {
 
   // if user is logged in
   if (localStorage.getItem('sessionId')) {
-    const validKeywords = ["QUOTES", "REPORT"]
+    const validKeywords = ["QUOTES", "REPORT", "lacson", "marcos", "robredo", "moreno", "pacquiao"]
     const isInputFound = validKeywords.findIndex(item => item === message.text)
 
     if (isInputFound < 0) {
