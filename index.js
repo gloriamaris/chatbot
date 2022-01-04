@@ -28,7 +28,7 @@ const client = require('twilio')(accountSid, authToken, {
 })
 
 const init = async () => {
-  const res = await axios.get(`${TELEGRAM_API}/setWebhook?url=${WEBHOOK_URL}`)
+  const res = await axios.get(`${TELEGRAM_API}/setWebhook?url=${WEBHOOK_URL}&`)
                       .catch(e => {
                         console.log('===== error')
                         console.log(e.response.data)
@@ -70,12 +70,14 @@ const verifyOTP = async (contactNumber, code) => {
 }
 
 // Mailgun service
-const sendEmail = data => {
+const sendEmail = async data => {
   console.log('===== sendEmail')
   console.log(data)
-  const mg = mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN});
-  mg.messages().send(data, function (error, body) {
-    console.log(body)
+  const mg = await mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN})
+
+  return mg.messages().send(data, function (error, body) {
+    // console.log(body)
+    return body
   })
 }
 
@@ -227,13 +229,16 @@ const processBot = async (message, step) => {
       let email = localStorage.getItem('sessionEmail')
       let report = localStorage.getItem('sessionReport')
 
-      sendEmail({
+      const status = await sendEmail({
         from: `IS238 Group 5 <${process.env.MAILGUN_FROM}>`,
         to: `${name} <${email}>`,
         subject: `A Report from ${name}`,
         'h:Reply-To': `${name} <${email}>`, 
         text: report
       })
+
+      console.log('status of email =========')
+      console.log({ status })
 
       return {
         chat_id: message.chat.id,
