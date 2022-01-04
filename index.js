@@ -235,7 +235,7 @@ const processBot = async (message, step) => {
 
     case 9:
       localStorage.setItem('sessionReport', message.text)
-      localStorage.setItem('currentStep', 9)
+      localStorage.setItem('currentStep', 3)
       let name = localStorage.getItem('sessionName')
       let email = localStorage.getItem('sessionEmail')
       let report = localStorage.getItem('sessionReport')
