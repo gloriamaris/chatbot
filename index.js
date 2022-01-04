@@ -131,12 +131,32 @@ const processBot = async (message, step) => {
 
     // verify OTP
     case 3:
-      //const status = await verifyOTP(localStorage.getItem('contactNumber'), message.text)
+      let status = 'approved'
+      if (localStorage.getItem('sessionId')) {
+        const validKeywords = ["QUOTES", "/logout"]
+        const isInputFound = validKeywords.findIndex(item => item === message.text)
+
+        if (!isInputFound) {
+          return {
+            chat_id: message.chat.id,
+            message_id: message.message_id,
+            text: "Sorry, you have entered an invalid keyword. Please try again."
+          }  
+        }
+
+        return {
+          chat_id: message.chat.id,
+          message_id: message.message_id,
+          text: "To get a random quote from presidential candidates, type QUOTES.\nTo logout, type /logout."
+        }  
+      }
+      
+      //let status = await verifyOTP(localStorage.getItem('contactNumber'), message.text)
       //console.log(status)
-      const status = 'approved'
       if (status === 'approved') {
         localStorage.removeItem('contactNumber')
         localStorage.setItem('sessionId', message.from.id)
+        
         return {
           chat_id: message.chat.id,
           message_id: message.message_id,
