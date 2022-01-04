@@ -3,6 +3,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const axios = require('axios')
 const quotes = require('./quotes.json')
+const validator = require('email-validator')
 
 const { SERVER_URL, API_TOKEN, TELEGRAM_API_URL } = process.env
 const TELEGRAM_API = TELEGRAM_API_URL + '/bot' + API_TOKEN
@@ -29,10 +30,10 @@ const client = require('twilio')(accountSid, authToken, {
 
 const init = async () => {
   const res = await axios.get(`${TELEGRAM_API}/setWebhook?url=${WEBHOOK_URL}&`)
-                      .catch(e => {
-                        console.log('===== error')
-                        console.log(e.response.data)
-                      })
+    .catch(e => {
+      console.log('===== error')
+      console.log(e.response.data)
+    })
 
   console.log(res.data)
 }
@@ -45,39 +46,38 @@ const sendOTP = (contactNumber, channel = 'sms') => {
   const { TWILIO_VERIFY_SID } = process.env
 
   client.verify.services(TWILIO_VERIFY_SID)
-        .verifications
-        .create({
-          to: '+' + contactNumber,
-          channel
-        })
-        .then(verification => console.log(verification.status))
+    .verifications
+    .create({
+      to: '+' + contactNumber,
+      channel
+    })
+    .then(verification => console.log(verification.status))
 }
 
 const verifyOTP = async (contactNumber, code) => {
   const { TWILIO_VERIFY_SID } = process.env
 
   const status = await client.verify.services(TWILIO_VERIFY_SID)
-      .verificationChecks
-      .create({to: '+' + contactNumber, code: code})
-      .then(verification_check => verification_check.status)
-      .catch(response => {
-        console.log('response?????')
-        console.log(response)
-      })
+    .verificationChecks
+    .create({ to: '+' + contactNumber, code: code })
+    .then(verification_check => verification_check.status)
+    .catch(response => {
+      console.log('response?????')
+      console.log(response)
+    })
 
   return status
 
 }
 
 // Mailgun service
-const sendEmail = async data => {
+const sendEmail = data => {
   console.log('===== sendEmail')
   console.log(data)
-  const mg = await mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN})
+  const mg = mailgun({ apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN })
 
-  return await mg.messages().send(data, function (error, body) {
-    // console.log(body)
-    return body
+  mg.messages().send(data, function (error, body) {
+    console.log(body)
   })
 }
 
@@ -102,7 +102,7 @@ const processBot = async (message, step) => {
         message_id: message.message_id,
         text: "You are now logged out. Please type /start to try again."
       }
-    
+
     case 1:
       return {
         chat_id: message.chat.id,
@@ -110,7 +110,7 @@ const processBot = async (message, step) => {
         text: "Welcome to Chatbot JS! Are you ready to start?",
         reply_markup: {
           keyboard: [
-            [{ 
+            [{
               text: "Yes, let\'s do it!",
               request_contact: true
             }]
@@ -128,7 +128,7 @@ const processBot = async (message, step) => {
         message_id: message.message_id,
         text: "Please enter the OTP sent to your phone number."
       }
-    
+
     // verify OTP
     case 3:
       //const status = await verifyOTP(localStorage.getItem('contactNumber'), message.text)
@@ -150,8 +150,8 @@ const processBot = async (message, step) => {
           text: "Please enter the OTP sent to your phone number."
         }
       }
-    
-    case 4: 
+
+    case 4:
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
@@ -159,23 +159,23 @@ const processBot = async (message, step) => {
         reply_markup: {
           inline_keyboard: [
             [
-              { 
+              {
                 text: "Ping Lacson",
                 callback_data: "lacson"
               },
-              { 
+              {
                 text: "Bongbong Marcos",
                 callback_data: "marcos"
               },
-              { 
+              {
                 text: "Leni Robredo",
                 callback_data: "robredo"
               },
-              { 
+              {
                 text: "Isko Moreno",
                 callback_data: "moreno"
               },
-              { 
+              {
                 text: "Manny Pacquiao",
                 callback_data: "pacquiao"
               },
@@ -184,7 +184,7 @@ const processBot = async (message, step) => {
           one_time_keyboard: true
         }
       }
-    
+
     case 5:
       let randomNumber = Math.floor(Math.random() * 5)
       let candidate = message.reply_markup.inline_keyboard[0].find(item => item.callback_data === message.selected)
@@ -195,7 +195,7 @@ const processBot = async (message, step) => {
         message_id: message.message_id,
         text: quotableQuote + "\n\nTo generate report, type REPORT.\nTo generate a new quote, type QUOTES."
       }
-    
+
     case 6:
       localStorage.setItem('currentStep', 7)
       return {
@@ -203,8 +203,8 @@ const processBot = async (message, step) => {
         message_id: message.message_id,
         text: "What is your name?"
       }
-      
-    case 7: 
+
+    case 7:
       localStorage.setItem('currentStep', 8)
       localStorage.setItem('sessionName', message.text)
       console.log('======== message')
@@ -213,32 +213,39 @@ const processBot = async (message, step) => {
         message_id: message.message_id,
         text: "What is your e-mail address?"
       }
-      
-    case 8: 
-      localStorage.setItem('currentStep', 9)
-      localStorage.setItem('sessionEmail', message.text)
+
+    case 8:
+      if (validator.validate(message.text)) {
+        localStorage.setItem('currentStep', 9)
+        localStorage.setItem('sessionEmail', message.text)
+        return {
+          chat_id: message.chat.id,
+          message_id: message.message_id,
+          text: "What is your report?"
+        }
+      }
+
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
-        text: "What is your report?"
+        text: "Sorry, you have entered an invalid keyword. Please type input a valid e-mail address."
       }
-      
-    case 9: 
+
+
+
+    case 9:
       localStorage.setItem('sessionReport', message.text)
       let name = localStorage.getItem('sessionName')
       let email = localStorage.getItem('sessionEmail')
       let report = localStorage.getItem('sessionReport')
 
-      const emailStatus = await sendEmail({
+      sendEmail({
         from: `IS238 Group 5 <${process.env.MAILGUN_FROM}>`,
         to: `${name} <${email}>`,
         subject: `A Report from ${name}`,
-        'h:Reply-To': `${name} <${email}>`, 
+        'h:Reply-To': `${name} <${email}>`,
         text: report
       })
-
-      console.log('status of email =========')
-      console.log({ emailStatus })
 
       return {
         chat_id: message.chat.id,
@@ -262,11 +269,11 @@ const processBot = async (message, step) => {
         text: "To start, please type /start."
       }
   }
-} 
+}
 
 const getCurrentStep = (message) => {
   const currentStep = +localStorage.getItem('currentStep')
-  
+
   if (message.text === '/start') {
     return 1
   }
@@ -288,7 +295,7 @@ const getCurrentStep = (message) => {
   if (localStorage.getItem('sessionId')) {
     const validKeywords = ["QUOTES", "REPORT", "Choose one:"]
     const isInputFound = validKeywords.findIndex(item => item === message.text)
-    console.log({message: message.text, currentStep})
+    console.log({ message: message.text, currentStep })
 
     if (isInputFound < 0 && currentStep < 6 && currentStep > 9) {
       return 10
@@ -305,7 +312,7 @@ const getCurrentStep = (message) => {
     if (message.text === "REPORT") {
       return 6
     }
-    
+
     if (currentStep) {
       return currentStep
     }
@@ -317,7 +324,7 @@ const getCurrentStep = (message) => {
 
 app.post(URI, async (req, res) => {
   const { message, callback_query } = req.body
-  let requestData = message 
+  let requestData = message
 
   console.log({ message, callback_query })
 
@@ -335,19 +342,19 @@ app.post(URI, async (req, res) => {
         'Content-Type': 'application/json'
       }
     }
-  
+
     const currentStep = getCurrentStep(requestData)
     localStorage.setItem('currentStep', currentStep)
     console.log('current step ===', currentStep)
     const payload = await processBot(requestData, currentStep)
     console.log('payload ===', payload)
-  
+
     await axios.post(`${TELEGRAM_API}/sendMessage`, JSON.stringify(payload), config)
-              .catch(e => {
-                console.log('===== error')
-                console.log(e.response)
-              })
-  
+      .catch(e => {
+        console.log('===== error')
+        console.log(e.response)
+      })
+
     return res.send()
   }
 
@@ -358,4 +365,3 @@ app.listen(process.env.PORT || 5000, async () => {
   console.log('🚀 app running on port', process.env.PORT || 5000)
   await init()
 })
- 
