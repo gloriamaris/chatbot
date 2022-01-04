@@ -229,7 +229,7 @@ const processBot = async (message, step) => {
       let email = localStorage.getItem('sessionEmail')
       let report = localStorage.getItem('sessionReport')
 
-      const status = await sendEmail({
+      const emailStatus = await sendEmail({
         from: `IS238 Group 5 <${process.env.MAILGUN_FROM}>`,
         to: `${name} <${email}>`,
         subject: `A Report from ${name}`,
@@ -238,7 +238,7 @@ const processBot = async (message, step) => {
       })
 
       console.log('status of email =========')
-      console.log({ status })
+      console.log({ emailStatus })
 
       return {
         chat_id: message.chat.id,
