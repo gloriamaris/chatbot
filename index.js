@@ -75,7 +75,7 @@ const sendEmail = async data => {
   console.log(data)
   const mg = await mailgun({apiKey: process.env.MAILGUN_API_KEY, domain: process.env.MAILGUN_DOMAIN})
 
-  return mg.messages().send(data, function (error, body) {
+  return await mg.messages().send(data, function (error, body) {
     // console.log(body)
     return body
   })
