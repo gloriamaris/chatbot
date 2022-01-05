@@ -246,10 +246,8 @@ const processBot = async (message, step) => {
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
-        text: "Sorry, you have entered an invalid keyword. Please type input a valid e-mail address."
+        text: "Sorry, you have entered an invalid input. Please type a valid e-mail address."
       }
-
-
 
     case 9:
       localStorage.setItem('sessionReport', message.text)
