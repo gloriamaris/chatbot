@@ -222,7 +222,7 @@ const processBot = async (message, step) => {
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
-        text: quotableQuote + "\n\nSorry, something went wrong. Please type QUOTES again."
+        text: "\n\nSorry, something went wrong. Please type QUOTES again."
       }
 
     case 6:
