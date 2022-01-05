@@ -208,9 +208,10 @@ const processBot = async (message, step) => {
     case 5:
       let randomNumber = Math.floor(Math.random() * 5)
       let candidate = message?.reply_markup?.inline_keyboard[0]?.find(item => item.callback_data === message.selected)
-      let quotableQuote = `"${quotes[message.selected][randomNumber]}"\n–– ${candidate.text}`
-
+      
       if (candidate) {
+        let quotableQuote = `"${quotes[message.selected][randomNumber]}"\n–– ${candidate.text}`
+
         return {
           chat_id: message.chat.id,
           message_id: message.message_id,
