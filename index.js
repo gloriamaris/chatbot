@@ -133,24 +133,13 @@ const processBot = async (message, step) => {
     case 3:
       let status = 'approved'
       if (localStorage.getItem('sessionId')) {
-        const validKeywords = ["QUOTES", "/logout"]
-        const isInputFound = validKeywords.findIndex(item => item === message.text)
-        console.log('isInputFound', { isInputFound, text: message.text })
-        if (isInputFound < 0) {
-          return {
-            chat_id: message.chat.id,
-            message_id: message.message_id,
-            text: "Sorry, you have entered an invalid keyword. Please try again."
-          }  
-        }
-
         return {
           chat_id: message.chat.id,
           message_id: message.message_id,
           text: "To get a random quote from presidential candidates, type QUOTES.\nTo logout, type /logout."
         }  
       }
-      
+
       //let status = await verifyOTP(localStorage.getItem('contactNumber'), message.text)
       //console.log(status)
       if (status === 'approved') {
@@ -317,7 +306,7 @@ const getCurrentStep = (message) => {
     return 2
   }
 
-  if (localStorage.getItem('contactNumber')) {
+  if (!localStorage.getItem('sessionId') && localStorage.getItem('contactNumber')) {
     return 3
   }
 
