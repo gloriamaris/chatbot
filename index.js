@@ -136,7 +136,7 @@ const processBot = async (message, step) => {
         const validKeywords = ["QUOTES", "/logout"]
         const isInputFound = validKeywords.findIndex(item => item === message.text)
         console.log('isInputFound', { isInputFound, text: message.text })
-        if (!isInputFound) {
+        if (isInputFound < 0) {
           return {
             chat_id: message.chat.id,
             message_id: message.message_id,
