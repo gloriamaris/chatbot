@@ -131,7 +131,6 @@ const processBot = async (message, step) => {
 
     // verify OTP
     case 3:
-      let status = 'approved'
       if (localStorage.getItem('sessionId')) {
         return {
           chat_id: message.chat.id,
