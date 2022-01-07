@@ -131,6 +131,8 @@ const processBot = async (message, step) => {
 
     // verify OTP
     case 3:
+      let status = await verifyOTP(localStorage.getItem('contactNumber'), message.text)
+ 
       if (localStorage.getItem('sessionId')) {
         return {
           chat_id: message.chat.id,
@@ -138,8 +140,6 @@ const processBot = async (message, step) => {
           text: "To get a random quote from presidential candidates, type QUOTES.\nTo logout, type /logout."
         }  
       }
-
-      let status = await verifyOTP(localStorage.getItem('contactNumber'), message.text)
       
       if (status === 'approved') {
         localStorage.removeItem('contactNumber')
