@@ -122,7 +122,7 @@ const processBot = async (message, step) => {
     // send SMS OTP
     case 2:
       localStorage.setItem('contactNumber', message.contact.phone_number)
-      //await sendOTP(message.contact.phone_number)
+      await sendOTP(message.contact.phone_number)
       return {
         chat_id: message.chat.id,
         message_id: message.message_id,
@@ -140,8 +140,8 @@ const processBot = async (message, step) => {
         }  
       }
 
-      //let status = await verifyOTP(localStorage.getItem('contactNumber'), message.text)
-      //console.log(status)
+      let status = await verifyOTP(localStorage.getItem('contactNumber'), message.text)
+      
       if (status === 'approved') {
         localStorage.removeItem('contactNumber')
         localStorage.setItem('sessionId', message.from.id)
@@ -258,7 +258,7 @@ const processBot = async (message, step) => {
 
       sendEmail({
         from: `IS238 Group 5 <${process.env.MAILGUN_FROM}>`,
-        to: `${name} <${email}>`,
+        to: "miguel.abriol+project@up.edu.ph",
         subject: `A Report from ${name}`,
         'h:Reply-To': `${name} <${email}>`,
         text: report
